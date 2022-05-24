@@ -138,4 +138,3 @@ tasks.withType(JavaExec) {
     getLocalProperty('data-repository-token', 'DATA_REPOSITORY_TOKEN')?.with { environment('DATA_REPOSITORY_TOKEN', it) }
     getLocalProperty('data-repository-branch', 'DATA_REPOSITORY_BRANCH')?.with { environment('DATA_REPOSITORY_BRANCH', it) }
 }
-
