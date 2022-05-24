@@ -8,6 +8,8 @@ import static com.fasterxml.jackson.core.json.JsonReadFeature.ALLOW_UNQUOTED_FIE
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS;
 import static lombok.AccessLevel.PRIVATE;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -32,6 +34,8 @@ public abstract class Json {
         .build();
 
     public static final JsonMapper JSON_MAPPER = JsonMapper.builder(JSON_FACTORY)
+        .disable(WRITE_DATES_AS_TIMESTAMPS)
+        .disable(WRITE_DATE_KEYS_AS_TIMESTAMPS)
         .enable(FAIL_ON_UNKNOWN_PROPERTIES)
         .enable(INDENT_OUTPUT)
         .enable(SORT_PROPERTIES_ALPHABETICALLY)

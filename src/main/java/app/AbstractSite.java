@@ -1,9 +1,10 @@
 package app;
 
 import static app.utils.Validation.validate;
-import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static java.lang.String.format;
 import static java.nio.file.Files.createDirectories;
+import static java.time.temporal.ChronoUnit.NANOS;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static org.openqa.selenium.chrome.ChromeDriverLogLevel.INFO;
@@ -12,13 +13,16 @@ import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordi
 import app.utils.ExtendedElementWait;
 import app.utils.ExtendedWebDriverWait;
 import jakarta.validation.Valid;
-import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotNull;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -52,9 +56,10 @@ public abstract class AbstractSite implements Site {
     @NotNull
     private final ArrayList<Cookie> cookies = new ArrayList<>();
 
+    @Default
+    @NotNull
+    private final AtomicReference<Instant> lastCookieClean = new AtomicReference<>(Instant.now());
 
-    @SuppressWarnings("resource")
-    private static final Validator VALIDATOR = buildDefaultValidatorFactory().getValidator();
 
     @Override
     public final void clipCoupons() {
@@ -66,6 +71,9 @@ public abstract class AbstractSite implements Site {
             var driver = browserContainer.getWebDriver();
             var wait = new ExtendedWebDriverWait(driver);
 
+            //driver.manage().window().setSize(new Dimension(1680, 1050));
+
+            clearCookiesIfNeeded();
             setCookiesTo(driver);
 
             try {
@@ -73,12 +81,30 @@ public abstract class AbstractSite implements Site {
 
             } catch (Throwable exception) {
                 getCookies().clear();
+                lastCookieClean.set(Instant.now());
                 throw exception;
             }
 
             setCookiesFrom(driver);
         });
     }
+
+    private void clearCookiesIfNeeded() {
+        var now = Instant.now();
+        now = now.minus(now.getNano(), NANOS);
+        var expirationSeconds = ThreadLocalRandom.current().nextLong(
+            COOKIE_EXPIRATION_MIN.toSeconds(),
+            COOKIE_EXPIRATION_MAX.toSeconds()
+        );
+        var cookieClean = now.minus(expirationSeconds, SECONDS);
+        if (cookieClean.isAfter(lastCookieClean.get())) {
+            getCookies().clear();
+            lastCookieClean.set(now);
+        }
+    }
+
+    private static final Duration COOKIE_EXPIRATION_MIN = Duration.ofDays(1);
+    private static final Duration COOKIE_EXPIRATION_MAX = Duration.ofDays(14);
 
     private void setCookiesTo(RemoteWebDriver driver) {
         getCookies().stream()
@@ -105,6 +131,7 @@ public abstract class AbstractSite implements Site {
 
     private void setCookiesFrom(RemoteWebDriver driver) {
         getCookies().clear();
+
         driver.manage().getCookies().stream()
             .filter(cookie -> cookie.getDomain() != null)
             .sorted(comparing(Cookie::getDomain)
