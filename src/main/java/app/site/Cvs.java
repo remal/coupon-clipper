@@ -7,11 +7,13 @@ import app.DisabledSite;
 import app.SiteMarker;
 import app.utils.ExtendedWebDriverWait;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.NotFoundException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -20,18 +22,19 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 @SuperBuilder
 @Log4j2
 @SiteMarker
-public class Target extends AbstractSite implements DisabledSite {
+public class Cvs extends AbstractSite implements DisabledSite {
 
-    private static final String OFFERS_URL = "https://www.target.com/circle/offers";
+    private static final String OFFERS_URL = "https://www.cvs.com/extracare/home";
 
     @Override
+    @SneakyThrows
     protected void clipCouponsImpl(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
         webDriver.get(OFFERS_URL);
         wait.randomDuration();
 
         WebElement signInButton;
         try {
-            signInButton = webDriver.findElement(cssSelector("[data-test=featured-offers-sign-in] button"));
+            signInButton = webDriver.findElement(cssSelector(".sign-in-block .sign-in"));
         } catch (NotFoundException ignored) {
             log.debug("Already signed in");
             signInButton = null;
@@ -40,40 +43,36 @@ public class Target extends AbstractSite implements DisabledSite {
             log.debug("Signing in");
             signInButton.click();
 
-            wait.untilVisible(cssSelector("[name=username]")).sendKeys(getAuth().getLogin());
-            wait.untilVisible(cssSelector("[name=password]")).sendKeys(getAuth().getPassword());
-            wait.untilVisible(cssSelector("[for=keepMeSignedIn]")).click();
-            wait.untilVisible(cssSelector("[type=submit]")).click();
+            wait.untilVisible(cssSelector("#login-container #emailField")).sendKeys(getAuth().getLogin());
+            wait.untilVisible(cssSelector("#login-container .cvs-checkbox-wrapper label")).click();
+            wait.untilVisible(cssSelector("#login-container button.primary")).click();
+
+            wait.untilVisible(cssSelector("#login-container #cvs-password-field-input")).sendKeys(getAuth().getLogin());
+            wait.untilVisible(cssSelector("#login-container button.primary")).click();
 
             wait.untilUrlIs(OFFERS_URL);
         }
 
-        webDriver.executeScript(
-            "document.querySelectorAll('#@web/component-header')"
-                + ".forEach(element => element.remove())"
-        );
+        wait.untilVisible(cssSelector("#sendAllCouponsToCard button.button-primary-normal")).click();
 
-        var containersSelector = cssSelector(".offer-grid-card > .offer-card");
-        var loadMoreSelector = cssSelector(".h-text-center button");
-        var loadMore = wait.untilVisible(loadMoreSelector);
+        var containersSelector = cssSelector(".coupon-box");
         var prevCouponItemsCounter = new AtomicInteger(
             webDriver.findElements(containersSelector).size()
         );
-        while (loadMore.isDisplayed()) {
+        while (true) {
             log.debug("Loading more coupons");
-            loadMore.click();
-            wait.until(__ -> {
-                var couponItemsCounter = webDriver.findElements(containersSelector).size();
-                if (couponItemsCounter > prevCouponItemsCounter.get()) {
-                    prevCouponItemsCounter.set(couponItemsCounter);
-                    return true;
-                }
-                return false;
-            });
+            webDriver.executeScript("window.scrollTo(0, document.body.scrollHeight)");
 
             try {
-                loadMore = webDriver.findElement(loadMoreSelector);
-            } catch (NotFoundException ignored) {
+                wait.until(__ -> {
+                    var couponItemsCounter = webDriver.findElements(containersSelector).size();
+                    if (couponItemsCounter > prevCouponItemsCounter.get()) {
+                        prevCouponItemsCounter.set(couponItemsCounter);
+                        return true;
+                    }
+                    return false;
+                });
+            } catch (TimeoutException e) {
                 break;
             }
         }
@@ -83,7 +82,7 @@ public class Target extends AbstractSite implements DisabledSite {
         for (var container : containers) {
             final WebElement button;
             try {
-                button = container.findElement(cssSelector("[data-test=button-default]"));
+                button = container.findElement(cssSelector("button.action-items"));
                 if (!button.isDisplayed() || !button.isEnabled()) {
                     continue;
                 }
@@ -91,14 +90,14 @@ public class Target extends AbstractSite implements DisabledSite {
                 continue;
             }
 
-            var title = container.findElement(cssSelector("[data-test=offer-title]"))
+            var title = container.findElement(cssSelector(".description-button"))
                 .getText()
                 .trim();
             log.info("Clipping Coupon: {}", title);
 
             button.click();
 
-            await(container).forVisibilityOfElementLocatedBy(cssSelector("[data-test=button-confirmed]"));
+            await(container).forVisibilityOfElementLocatedBy(cssSelector("div.action-items"));
         }
     }
 

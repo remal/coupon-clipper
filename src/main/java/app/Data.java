@@ -16,7 +16,7 @@ import static java.time.temporal.ChronoUnit.NANOS;
 import static java.util.Arrays.stream;
 import static java.util.Collections.synchronizedList;
 import static java.util.function.Predicate.not;
-import static org.apache.logging.log4j.Level.DEBUG;
+import static org.apache.logging.log4j.Level.TRACE;
 import static org.reflections.scanners.Scanners.SubTypes;
 
 import jakarta.validation.constraints.NotEmpty;
@@ -225,7 +225,7 @@ public class Data {
 
     private static class LoggingProgressMonitor implements ProgressMonitor {
 
-        private static final Level LEVEL = DEBUG;
+        private static final Level LEVEL = TRACE;
         private static final Duration DELAY = Duration.ofSeconds(1);
 
         private String title;

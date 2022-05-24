@@ -9,8 +9,8 @@ interface ExtendedWaitTrait {
     Duration WAIT_TIMEOUT = Duration.ofSeconds(10);
     Duration SLEEP_TIMEOUT = Duration.ofMillis(500);
 
-    Duration RANDOM_SLEEP_MIN = Duration.ofMillis(100);
-    Duration RANDOM_SLEEP_MAX = Duration.ofMillis(1_000);
+    Duration RANDOM_SLEEP_MIN = Duration.ofMillis(1_000);
+    Duration RANDOM_SLEEP_MAX = Duration.ofMillis(5_000);
 
     @SneakyThrows
     default void randomDuration() {

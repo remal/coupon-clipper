@@ -30,6 +30,7 @@ public class Safeway extends AbstractSite {
     private void signIn(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
         var signInUrl = "https://safeway.com/account/sign-in.html";
         webDriver.get(signInUrl);
+        wait.randomDuration();
 
         if (!canonizeUrl(webDriver.getCurrentUrl()).equals(canonizeUrl(signInUrl))) {
             log.debug("Already signed in");
@@ -46,6 +47,7 @@ public class Safeway extends AbstractSite {
 
     private static void clickClipCouponsButtons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
         webDriver.get("https://safeway.com/foru/coupons-deals.html");
+        wait.randomDuration();
 
         webDriver.executeScript(
             "document.querySelectorAll('.banner-experiencefragment')"
@@ -75,8 +77,6 @@ public class Safeway extends AbstractSite {
             } catch (NotFoundException ignored) {
                 break;
             }
-
-            wait.randomDuration();
         }
         webDriver.executeScript("window.scrollTo(0, -document.body.scrollHeight)");
 
