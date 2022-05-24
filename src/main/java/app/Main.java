@@ -23,8 +23,21 @@ public class Main {
             .build();
 
         var sites = data.loadSites();
-        sites.forEach(Site::clipCoupons);
+
+        var aggregatorException = new RuntimeException("Clipping coupons raised some exceptions");
+        for (var site : sites) {
+            try {
+                site.clipCoupons();
+            } catch (Throwable e) {
+                aggregatorException.addSuppressed(e);
+            }
+        }
+
         data.saveSites(sites);
+
+        if (aggregatorException.getSuppressed().length != 0) {
+            throw aggregatorException;
+        }
     }
 
     static {

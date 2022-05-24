@@ -11,10 +11,12 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 public class ExtendedWebDriverWait extends WebDriverWait implements ExtendedWaitTrait {
 
     private final WebDriver driver;
+    private final Function<String, String> defaultUrlCanonizer;
 
-    public ExtendedWebDriverWait(WebDriver driver) {
+    public ExtendedWebDriverWait(WebDriver driver, Function<String, String> defaultUrlCanonizer) {
         super(driver, WAIT_TIMEOUT, SLEEP_TIMEOUT);
         this.driver = driver;
+        this.defaultUrlCanonizer = defaultUrlCanonizer;
     }
 
     @Override
@@ -30,11 +32,14 @@ public class ExtendedWebDriverWait extends WebDriverWait implements ExtendedWait
         return until(visibilityOfElementLocated(locator));
     }
 
-    public void untilUrlIs(String url) {
+    public void untilUrlIs(Function<String, String> urlCanonizer, String url) {
+        var urlCanonized = urlCanonizer.apply(url);
+
         until(new Function<WebDriver, Boolean>() {
             @Override
             public Boolean apply(WebDriver ignored) {
-                return driver.getCurrentUrl().equals(url);
+                var currentUrlCanonized = urlCanonizer.apply(driver.getCurrentUrl());
+                return currentUrlCanonized.equals(urlCanonized);
             }
 
             @Override
@@ -44,11 +49,18 @@ public class ExtendedWebDriverWait extends WebDriverWait implements ExtendedWait
         });
     }
 
-    public void untilUrlIsNot(String url) {
+    public void untilUrlIs(String url) {
+        untilUrlIs(defaultUrlCanonizer, url);
+    }
+
+    public void untilUrlIsNot(Function<String, String> urlCanonizer, String url) {
+        var urlCanonized = urlCanonizer.apply(url);
+
         until(new Function<WebDriver, Boolean>() {
             @Override
             public Boolean apply(WebDriver ignored) {
-                return !driver.getCurrentUrl().equals(url);
+                var currentUrlCanonized = urlCanonizer.apply(driver.getCurrentUrl());
+                return !currentUrlCanonized.equals(urlCanonized);
             }
 
             @Override
@@ -56,6 +68,10 @@ public class ExtendedWebDriverWait extends WebDriverWait implements ExtendedWait
                 return "current URL is NOT " + url;
             }
         });
+    }
+
+    public void untilUrlIsNot(String url) {
+        untilUrlIsNot(defaultUrlCanonizer, url);
     }
 
 }

@@ -6,7 +6,7 @@ import lombok.SneakyThrows;
 
 interface ExtendedWaitTrait {
 
-    Duration WAIT_TIMEOUT = Duration.ofSeconds(20);
+    Duration WAIT_TIMEOUT = Duration.ofSeconds(10);
     Duration SLEEP_TIMEOUT = Duration.ofMillis(500);
 
     Duration RANDOM_SLEEP_MIN = Duration.ofMillis(100);

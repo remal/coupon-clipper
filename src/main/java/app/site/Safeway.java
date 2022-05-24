@@ -28,14 +28,15 @@ public class Safeway extends AbstractSite {
     }
 
     private void signIn(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
-        var signInUrl = "https://www.safeway.com/account/sign-in.html";
+        var signInUrl = "https://safeway.com/account/sign-in.html";
         webDriver.get(signInUrl);
 
-        if (!webDriver.getCurrentUrl().equals(signInUrl)) {
-            // already signed in
+        if (!canonizeUrl(webDriver.getCurrentUrl()).equals(canonizeUrl(signInUrl))) {
+            log.debug("Already signed in");
             return;
         }
 
+        log.debug("Signing in");
         wait.untilVisible(cssSelector(".sign-in-wrapper input[name=userId]")).sendKeys(getAuth().getLogin());
         wait.untilVisible(cssSelector(".sign-in-wrapper input[name=inputPassword]")).sendKeys(getAuth().getPassword());
         wait.untilVisible(cssSelector(".sign-in-wrapper #btnSignIn")).click();
@@ -44,7 +45,7 @@ public class Safeway extends AbstractSite {
     }
 
     private static void clickClipCouponsButtons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
-        webDriver.get("https://www.safeway.com/foru/coupons-deals.html");
+        webDriver.get("https://safeway.com/foru/coupons-deals.html");
 
         webDriver.executeScript(
             "document.querySelectorAll('.banner-experiencefragment')"
@@ -58,6 +59,7 @@ public class Safeway extends AbstractSite {
             webDriver.findElements(containersSelector).size()
         );
         while (loadMore.isDisplayed()) {
+            log.debug("Loading more coupons");
             loadMore.click();
             wait.until(__ -> {
                 var couponItemsCounter = webDriver.findElements(containersSelector).size();
@@ -104,6 +106,19 @@ public class Safeway extends AbstractSite {
 
             await(container).forVisibilityOfElementLocatedBy(cssSelector(".coupon-clipped-container"));
         }
+    }
+
+
+    @Override
+    protected String canonizeUrl(String url) {
+        var pos = url.indexOf('#');
+        if (pos >= 0) {
+            url = url.substring(0, pos);
+        }
+
+        url = url.replace("://www.", "://");
+
+        return url;
     }
 
 }

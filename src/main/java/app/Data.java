@@ -142,7 +142,7 @@ public class Data {
                 })
                 .filter(type -> {
                     if (DisabledSite.class.isAssignableFrom(type)) {
-                        LogManager.getLogger(type).warn("DISABLED");
+                        LogManager.getLogger(type).info("DISABLED");
                         return false;
                     }
                     return true;

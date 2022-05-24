@@ -32,10 +32,11 @@ public class Target extends AbstractSite implements DisabledSite {
         try {
             signInButton = webDriver.findElement(cssSelector("[data-test=featured-offers-sign-in] button"));
         } catch (NotFoundException ignored) {
-            // already signed in
+            log.debug("Already signed in");
             signInButton = null;
         }
         if (signInButton != null && signInButton.isDisplayed() && signInButton.isEnabled()) {
+            log.debug("Signing in");
             signInButton.click();
 
             wait.untilVisible(cssSelector("[name=username]")).sendKeys(getAuth().getLogin());
@@ -58,6 +59,7 @@ public class Target extends AbstractSite implements DisabledSite {
             webDriver.findElements(containersSelector).size()
         );
         while (loadMore.isDisplayed()) {
+            log.debug("Loading more coupons");
             loadMore.click();
             wait.until(__ -> {
                 var couponItemsCounter = webDriver.findElements(containersSelector).size();

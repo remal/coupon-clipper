@@ -47,6 +47,10 @@ public abstract class AbstractSite implements Site {
 
     protected abstract void clipCouponsImpl(RemoteWebDriver webDriver, ExtendedWebDriverWait wait);
 
+    protected String canonizeUrl(String url) {
+        return url;
+    }
+
 
     @NotNull
     @Valid
@@ -63,13 +67,13 @@ public abstract class AbstractSite implements Site {
 
     @Override
     public final void clipCoupons() {
-        LogManager.getLogger(this.getClass()).warn("Clipping coupons for: {}", getAuth().getLogin());
+        LogManager.getLogger(this.getClass()).info("Clipping coupons for: {}", getAuth().getLogin());
 
         validate(this, "Validation failed for object of " + this.getClass());
 
         forBrowserContainer(browserContainer -> {
             var driver = browserContainer.getWebDriver();
-            var wait = new ExtendedWebDriverWait(driver);
+            var wait = new ExtendedWebDriverWait(driver, this::canonizeUrl);
 
             //driver.manage().window().setSize(new Dimension(1680, 1050));
 
