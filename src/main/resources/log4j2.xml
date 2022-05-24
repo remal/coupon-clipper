@@ -16,7 +16,7 @@
       <AppenderRef ref="Console"/>
     </Root>
     <Logger name="app" level="DEBUG"/>
-    <Logger name="org.testcontainers.utility.RyukResourceReaper" level="ERROR"/>
+    <Logger name="org.testcontainers.utility" level="ERROR"/>
     <Logger name="org.hibernate.validator.internal" level="ERROR"/>
   </Loggers>
 </Configuration>
