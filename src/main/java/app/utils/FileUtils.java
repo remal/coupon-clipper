@@ -19,7 +19,7 @@ import lombok.SneakyThrows;
 public abstract class FileUtils {
 
     @SneakyThrows
-    public static void deleteFile(Path path) {
+    public static void deleteFileRecursivly(Path path) {
         try {
             walkFileTree(path.toAbsolutePath(), new SimpleFileVisitor<>() {
                 @Override
@@ -39,8 +39,8 @@ public abstract class FileUtils {
         }
     }
 
-    public static void deleteFile(File file) {
-        deleteFile(file.toPath());
+    public static void deleteFileRecursivly(File file) {
+        deleteFileRecursivly(file.toPath());
     }
 
 }

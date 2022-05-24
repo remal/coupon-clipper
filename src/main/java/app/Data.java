@@ -1,6 +1,6 @@
 package app;
 
-import static app.utils.FileUtils.deleteFile;
+import static app.utils.FileUtils.deleteFileRecursivly;
 import static app.utils.JsonUtils.JSON_MAPPER;
 import static app.utils.ValidationUtils.validate;
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
@@ -83,8 +83,11 @@ public class Data {
         var git = getGit();
         var repositoryPath = git.getRepository().getWorkTree().toPath().toAbsolutePath();
 
-        var sitesPath = repositoryPath.resolve(SITES_REPO_PATH);
-        deleteFile(sitesPath);
+        for (var site : sites) {
+            var siteFilesRepoPath = getSiteFilesRepoPath(site.getClass());
+            var siteFilesPath = repositoryPath.resolve(siteFilesRepoPath);
+            deleteFileRecursivly(siteFilesPath);
+        }
 
         for (var site : sites) {
             var siteFilesRepoPath = getSiteFilesRepoPath(site.getClass());
@@ -165,7 +168,7 @@ public class Data {
             validate(this);
 
             var repositoryDir = createTempDirectory(this.getClass().getName()).toAbsolutePath().toFile();
-            SHUTDOWN_ACTIONS.add(() -> deleteFile(repositoryDir));
+            SHUTDOWN_ACTIONS.add(() -> deleteFileRecursivly(repositoryDir));
 
             _git = call(Git.cloneRepository()
                 .setDirectory(repositoryDir)
