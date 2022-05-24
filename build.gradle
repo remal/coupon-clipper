@@ -1,0 +1,141 @@
+import org.gradle.api.internal.tasks.compile.HasCompileOptions
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'idea'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.4'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+application {
+    mainClass = 'app.Main'
+    executableDir = project.projectDir
+}
+
+repositories {
+    mavenCentral()
+}
+
+String lombokVersion = '1.18.24'
+String autoServiceVersion = '1.0.1'
+String seleniumVersion = '4.1.4'
+
+dependencies {
+    compileOnly "org.projectlombok:lombok:$lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    compileOnly "com.google.auto.service:auto-service-annotations:$autoServiceVersion"
+    annotationProcessor "com.google.auto.service:auto-service:$autoServiceVersion"
+
+    implementation platform('org.testcontainers:testcontainers-bom:1.17.2')
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.13.3')
+    implementation platform('org.apache.logging.log4j:log4j-bom:2.17.2')
+
+    implementation 'org.testcontainers:selenium'
+    implementation "org.seleniumhq.selenium:selenium-remote-driver:$seleniumVersion"
+    implementation "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
+    implementation "org.seleniumhq.selenium:selenium-support:$seleniumVersion"
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.1.0.202203080745-r'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names'
+    implementation 'org.hibernate.validator:hibernate-validator:7.0.4.Final'
+    implementation 'org.reflections:reflections:0.10.2'
+    implementation 'org.apache.logging.log4j:log4j-core'
+    implementation 'org.apache.logging.log4j:log4j-jcl'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl'
+    implementation 'org.apache.logging.log4j:log4j-jul'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
+
+    components.all(SeleniumAlignmentRule)
+}
+
+configurations.implementation.dependencies.withType(ExternalModuleDependency).all {
+    exclude group: 'ch.qos.logback'
+    exclude group: 'org.slf4j', module: 'slf4j-simple'
+    exclude group: 'com.google.auto.service'
+    exclude group: 'com.google.errorprone'
+    exclude group: 'com.google.j2objc'
+}
+
+project.ext.replaceModule = { String from, String to, String because = null, int majorVersion = -1 ->
+    because = because ?: "$from -> $to"
+    configurations.all { Configuration conf ->
+        conf.resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (majorVersion >= 0) {
+                String majorVersionString = majorVersion.toString()
+                String requestedVersion = details.requested.version
+                if (requestedVersion != null
+                    && !(requestedVersion == majorVersionString || requestedVersion.startsWith("${majorVersionString}."))
+                ) {
+                    return
+                }
+            }
+
+            if ("${details.requested.group}:${details.requested.name}" == from) {
+                if (to.count(":") == 1) {
+                    details.because(because).useTarget("${to}:${details.requested.version}")
+                } else {
+                    details.because(because).useTarget(to)
+                }
+            }
+        }
+    }
+}
+
+project.replaceModule('junit:junit', 'io.quarkus:quarkus-junit4-mock:2.9.1.Final', 'don\'t use JUnit4')
+
+class SeleniumAlignmentRule implements ComponentMetadataRule {
+    void execute(ComponentMetadataContext context) {
+        context.details.with {
+            if (id.group == 'org.seleniumhq.selenium') {
+                belongsTo("${id.group}:bom:${id.version}")
+            }
+        }
+    }
+}
+
+tasks.matching({ it instanceof HasCompileOptions }).configureEach { HasCompileOptions task ->
+    task.options.with {
+        it.encoding = 'UTF-8'
+        // Produce deprecation warnings:
+        it.deprecation = true
+        it.compilerArgs.addAll(
+            [
+                // !!! DO NOT DISABLE THIS !!! Store parameter names into bytecode:
+                '-parameters',
+
+                // Fail on any warning:
+                '-Werror',
+                // Linting settings:
+                '-Xlint:all',
+                '-Xlint:-rawtypes',
+                '-Xlint:-serial',
+                '-Xlint:-processing',
+            ]
+        )
+    }
+}
+
+project.ext.getLocalProperty = { String propertyName, String fallbackEnvironmentVariableName = null ->
+    String rootProjectName = project.getRootProject().getName()
+    return (System.getProperty(propertyName))
+        ?: (project.findProperty(propertyName)?.toString())
+        ?: (System.getProperty("${rootProjectName}.${propertyName}"))
+        ?: (project.findProperty("${rootProjectName}.${propertyName}")?.toString())
+        ?: (fallbackEnvironmentVariableName?.with { System.getenv(it) })
+}
+
+tasks.withType(JavaExec) {
+    getLocalProperty('data-repository', 'DATA_REPOSITORY')?.with { environment('DATA_REPOSITORY', it) }
+    getLocalProperty('data-repository-token', 'DATA_REPOSITORY_TOKEN')?.with { environment('DATA_REPOSITORY_TOKEN', it) }
+    getLocalProperty('data-repository-branch', 'DATA_REPOSITORY_BRANCH')?.with { environment('DATA_REPOSITORY_BRANCH', it) }
+}
+
