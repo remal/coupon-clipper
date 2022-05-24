@@ -9,7 +9,7 @@ import jakarta.validation.Validator;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
-public abstract class Validation {
+public abstract class ValidationUtils {
 
     @SuppressWarnings("resource")
     private static final Validator VALIDATOR = buildDefaultValidatorFactory().getValidator();

@@ -30,8 +30,32 @@ public class ExtendedWebDriverWait extends WebDriverWait implements ExtendedWait
         return until(visibilityOfElementLocated(locator));
     }
 
+    public void untilUrlIs(String url) {
+        until(new Function<WebDriver, Boolean>() {
+            @Override
+            public Boolean apply(WebDriver ignored) {
+                return driver.getCurrentUrl().equals(url);
+            }
+
+            @Override
+            public String toString() {
+                return "current URL is " + url;
+            }
+        });
+    }
+
     public void untilUrlIsNot(String url) {
-        until(__ -> !driver.getCurrentUrl().equals(url));
+        until(new Function<WebDriver, Boolean>() {
+            @Override
+            public Boolean apply(WebDriver ignored) {
+                return !driver.getCurrentUrl().equals(url);
+            }
+
+            @Override
+            public String toString() {
+                return "current URL is NOT " + url;
+            }
+        });
     }
 
 }

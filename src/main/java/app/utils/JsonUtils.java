@@ -23,7 +23,7 @@ import java.io.Serializable;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
-public abstract class Json {
+public abstract class JsonUtils {
 
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
         .disable(INTERN_FIELD_NAMES)

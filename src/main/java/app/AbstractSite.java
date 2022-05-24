@@ -1,6 +1,6 @@
 package app;
 
-import static app.utils.Validation.validate;
+import static app.utils.ValidationUtils.validate;
 import static java.lang.String.format;
 import static java.nio.file.Files.createDirectories;
 import static java.time.temporal.ChronoUnit.NANOS;
@@ -63,7 +63,7 @@ public abstract class AbstractSite implements Site {
 
     @Override
     public final void clipCoupons() {
-        LogManager.getLogger(this.getClass()).info("Clipping coupons for: {}", getAuth().getLogin());
+        LogManager.getLogger(this.getClass()).warn("Clipping coupons for: {}", getAuth().getLogin());
 
         validate(this, "Validation failed for object of " + this.getClass());
 

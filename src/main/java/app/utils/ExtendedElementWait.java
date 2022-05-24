@@ -25,9 +25,17 @@ public class ExtendedElementWait extends FluentWait<WebElement> implements Exten
     }
 
     public WebElement forVisibilityOfElementLocatedBy(By locator) {
-        return until(element -> {
-            var resultElement = element.findElement(locator);
-            return resultElement.isDisplayed() ? resultElement : null;
+        return until(new Function<>() {
+            @Override
+            public WebElement apply(WebElement element) {
+                var resultElement = element.findElement(locator);
+                return resultElement.isDisplayed() ? resultElement : null;
+            }
+
+            @Override
+            public String toString() {
+                return "visibility of child element located by " + locator;
+            }
         });
     }
 

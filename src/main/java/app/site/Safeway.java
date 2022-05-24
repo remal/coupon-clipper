@@ -51,15 +51,16 @@ public class Safeway extends AbstractSite {
                 + ".forEach(element => element.remove())"
         );
 
+        var containersSelector = cssSelector(".grid-coupon-container");
         var loadMoreSelector = cssSelector(".load-more-container .btn.load-more");
         var loadMore = wait.untilVisible(loadMoreSelector);
         var prevCouponItemsCounter = new AtomicInteger(
-            webDriver.findElements(cssSelector(".grid-coupon-container")).size()
+            webDriver.findElements(containersSelector).size()
         );
         while (loadMore.isDisplayed()) {
             loadMore.click();
             wait.until(__ -> {
-                var couponItemsCounter = webDriver.findElements(cssSelector(".grid-coupon-container")).size();
+                var couponItemsCounter = webDriver.findElements(containersSelector).size();
                 if (couponItemsCounter > prevCouponItemsCounter.get()) {
                     prevCouponItemsCounter.set(couponItemsCounter);
                     return true;
@@ -82,7 +83,7 @@ public class Safeway extends AbstractSite {
                 + ".forEach(element => element.remove())"
         );
 
-        var containers = webDriver.findElements(cssSelector(".grid-coupon-container"));
+        var containers = webDriver.findElements(containersSelector);
         for (var container : containers) {
             final WebElement button;
             try {

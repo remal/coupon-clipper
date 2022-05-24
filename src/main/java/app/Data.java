@@ -1,8 +1,8 @@
 package app;
 
 import static app.utils.FileUtils.deleteFile;
-import static app.utils.Json.JSON_MAPPER;
-import static app.utils.Validation.validate;
+import static app.utils.JsonUtils.JSON_MAPPER;
+import static app.utils.ValidationUtils.validate;
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static java.lang.Math.toIntExact;
