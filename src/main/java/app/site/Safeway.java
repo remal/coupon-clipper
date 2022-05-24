@@ -111,12 +111,12 @@ public class Safeway extends AbstractSite {
 
     @Override
     protected String canonizeUrl(String url) {
+        url = super.canonizeUrl(url);
+
         var pos = url.indexOf('#');
         if (pos >= 0) {
             url = url.substring(0, pos);
         }
-
-        url = url.replace("://www.", "://");
 
         return url;
     }

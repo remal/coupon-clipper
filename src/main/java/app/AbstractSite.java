@@ -48,7 +48,7 @@ public abstract class AbstractSite implements Site {
     protected abstract void clipCouponsImpl(RemoteWebDriver webDriver, ExtendedWebDriverWait wait);
 
     protected String canonizeUrl(String url) {
-        return url;
+        return url.replace("://www.", "://");
     }
 
 
