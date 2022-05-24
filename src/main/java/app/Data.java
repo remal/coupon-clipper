@@ -31,6 +31,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.GitCommand;
 import org.eclipse.jgit.api.TransportCommand;
@@ -138,6 +139,13 @@ public class Data {
                     if (!type.isAnnotationPresent(markerAnnotation)) {
                         log.warn("{} is not annotated with {}", type, markerAnnotation);
                     }
+                })
+                .filter(type -> {
+                    if (DisabledSite.class.isAssignableFrom(type)) {
+                        LogManager.getLogger(type).warn("DISABLED");
+                        return false;
+                    }
+                    return true;
                 })
                 .toList();
         }
