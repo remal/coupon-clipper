@@ -159,8 +159,11 @@ public abstract class AbstractSite implements Site {
 
                     var currentUri = parseUri(driver.getCurrentUrl());
                     var currentProtocol = currentUri.getScheme();
-                    if (!processedProtocols.add(currentProtocol)) {
-                        continue;
+                    if (!protocol.equals(currentProtocol)) {
+                        log.info("  ... redirected to: {}://{}/", protocol, domain);
+                        if (!processedProtocols.add(currentProtocol)) {
+                            continue;
+                        }
                     }
 
                     for (var cookie : domainCookies) {
