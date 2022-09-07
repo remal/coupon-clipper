@@ -8,6 +8,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
+import static lombok.AccessLevel.NONE;
 import static org.openqa.selenium.chrome.ChromeDriverLogLevel.INFO;
 import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordingMode.RECORD_ALL;
 
@@ -54,6 +55,7 @@ public abstract class AbstractSite implements Site {
     }
 
 
+    @Getter(NONE)
     @SuppressWarnings("NonConstantLogger")
     private final Logger log = LogManager.getLogger(this.getClass());
 
