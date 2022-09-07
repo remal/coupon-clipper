@@ -17,12 +17,15 @@ import app.utils.ExtendedWebDriverWait;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.File;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.Builder.Default;
@@ -133,6 +136,7 @@ public abstract class AbstractSite implements Site {
     private static final Duration COOKIE_EXPIRATION_MIN = Duration.ofDays(1);
     private static final Duration COOKIE_EXPIRATION_MAX = Duration.ofDays(14);
 
+    @SuppressWarnings("java:S3776")
     private void setCookiesTo(RemoteWebDriver driver) {
         getCookies().stream()
             .filter(cookie -> cookie.getDomain() != null)
@@ -144,9 +148,21 @@ public abstract class AbstractSite implements Site {
                 return domain;
             }))
             .forEach((domain, domainCookies) -> {
+                Set<String> processedProtocols = new LinkedHashSet<>();
                 for (var protocol : asList("http", "https")) {
+                    if (!processedProtocols.add(protocol)) {
+                        continue;
+                    }
+
                     log.info("Settings cookies: {}://{}/", protocol, domain);
                     driver.get(protocol + "://" + domain + "/favicon.ico");
+
+                    var currentUri = parseUri(driver.getCurrentUrl());
+                    var currentProtocol = currentUri.getScheme();
+                    if (!processedProtocols.add(currentProtocol)) {
+                        continue;
+                    }
+
                     for (var cookie : domainCookies) {
                         try {
                             driver.manage().addCookie(cookie);
@@ -156,6 +172,11 @@ public abstract class AbstractSite implements Site {
                     }
                 }
             });
+    }
+
+    @SneakyThrows
+    private static URI parseUri(String string) {
+        return new URI(string);
     }
 
     private void setCookiesFrom(RemoteWebDriver driver) {
