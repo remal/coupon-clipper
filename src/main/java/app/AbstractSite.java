@@ -99,6 +99,8 @@ public abstract class AbstractSite implements Site {
 
             setCookiesFrom(driver);
         });
+
+        log.info("All coupons are clipped");
     }
 
     private void clearCookiesIfNeeded() {
