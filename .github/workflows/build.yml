@@ -26,6 +26,8 @@ jobs:
       with:
         java-version: 17
         distribution: zulu
+    - name: Validate Gradle Wrapper
+      uses: gradle/wrapper-validation-action@v1
     - name: Cache Gradle
       uses: remal-github-actions/cache-gradle@main
     - name: Login to Docker Hub
