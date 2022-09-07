@@ -112,6 +112,9 @@ public class Safeway extends AbstractSite {
 
             await(container).forVisibilityOfElementLocatedBy(cssSelector(".coupon-clipped-container"));
         }
+
+
+        log.info("All coupons are clipped");
     }
 
 
