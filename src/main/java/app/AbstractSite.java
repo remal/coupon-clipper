@@ -145,7 +145,7 @@ public abstract class AbstractSite implements Site {
             }))
             .forEach((domain, domainCookies) -> {
                 for (var protocol : asList("http", "https")) {
-                    log.info("Settings cookies: {} ({})", domain, protocol.toUpperCase());
+                    log.info("Settings cookies: {}://{}/", protocol, domain);
                     driver.get(protocol + "://" + domain + "/favicon.ico");
                     for (var cookie : domainCookies) {
                         try {
