@@ -83,7 +83,9 @@ public abstract class AbstractSite implements Site {
         validate(this, "Validation failed for object of " + this.getClass());
 
         forBrowserContainer(browserContainer -> {
+            log.debug("Starting WebDriver")
             var driver = browserContainer.getWebDriver();
+            log.debug("  ... WebDriver started")
             var wait = new ExtendedWebDriverWait(driver, this::canonizeUrl);
 
             //driver.manage().window().setSize(new Dimension(1680, 1050));
