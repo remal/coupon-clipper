@@ -207,7 +207,9 @@ public abstract class AbstractSite implements Site {
             .withCapabilities(SELENIUM_CAPABILITIES)
             .withRecordingFileFactory(new SiteRecordingFileFactory());
         try (browserContainer) {
+            log.debug("Starting container: {}", browserContainer.getDockerImageName());
             browserContainer.start();
+            log.debug("  ... started successfully");
 
             Throwable exception = null;
             try {
