@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.nio.file.Files.createDirectories;
 import static java.time.temporal.ChronoUnit.NANOS;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static org.openqa.selenium.chrome.ChromeDriverLogLevel.INFO;
@@ -29,6 +30,7 @@ import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.InvalidCookieDomainException;
 import org.openqa.selenium.MutableCapabilities;
@@ -52,6 +54,10 @@ public abstract class AbstractSite implements Site {
     }
 
 
+    @SuppressWarnings("NonConstantLogger")
+    private final Logger log = LogManager.getLogger(this.getClass());
+
+
     @NotNull
     @Valid
     private final Auth auth;
@@ -67,7 +73,7 @@ public abstract class AbstractSite implements Site {
 
     @Override
     public final void clipCoupons() {
-        LogManager.getLogger(this.getClass()).info("Clipping coupons for: {}", getAuth().getLogin());
+        log.info("Clipping coupons for: {}", getAuth().getLogin());
 
         validate(this, "Validation failed for object of " + this.getClass());
 
@@ -102,6 +108,7 @@ public abstract class AbstractSite implements Site {
         );
         var cookieClean = now.minus(expirationSeconds, SECONDS);
         if (cookieClean.isAfter(lastCookieClean.get())) {
+            log.info("Clearing cookies");
             getCookies().clear();
             lastCookieClean.set(now);
         }
@@ -121,13 +128,16 @@ public abstract class AbstractSite implements Site {
                 return domain;
             }))
             .forEach((domain, domainCookies) -> {
-                driver.get("http://" + domain + "/favicon.ico");
+                log.info("Settings cookies for {}", domain);
 
-                for (var cookie : domainCookies) {
-                    try {
-                        driver.manage().addCookie(cookie);
-                    } catch (InvalidCookieDomainException ignored) {
-                        // do nothing
+                for (var protocol : asList("http", "https")) {
+                    driver.get(protocol + "://" + domain + "/favicon.ico");
+                    for (var cookie : domainCookies) {
+                        try {
+                            driver.manage().addCookie(cookie);
+                        } catch (InvalidCookieDomainException ignored) {
+                            // do nothing
+                        }
                     }
                 }
             });

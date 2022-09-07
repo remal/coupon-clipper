@@ -33,11 +33,11 @@ public class Safeway extends AbstractSite {
         wait.randomDuration();
 
         if (!canonizeUrl(webDriver.getCurrentUrl()).equals(canonizeUrl(signInUrl))) {
-            log.debug("Already signed in");
+            log.info("Already signed in");
             return;
         }
 
-        log.debug("Signing in");
+        log.info("Signing in");
         wait.untilVisible(cssSelector(".sign-in-wrapper input[name=userId]")).sendKeys(getAuth().getLogin());
         wait.untilVisible(cssSelector(".sign-in-wrapper input[name=inputPassword]")).sendKeys(getAuth().getPassword());
         wait.untilVisible(cssSelector(".sign-in-wrapper #btnSignIn")).click();
@@ -48,6 +48,9 @@ public class Safeway extends AbstractSite {
     private static void clickClipCouponsButtons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
         webDriver.get("https://safeway.com/foru/coupons-deals.html");
         wait.randomDuration();
+
+
+        log.info("Loading all coupons");
 
         webDriver.executeScript(
             "document.querySelectorAll('.banner-experiencefragment')"
@@ -79,6 +82,9 @@ public class Safeway extends AbstractSite {
             }
         }
         webDriver.executeScript("window.scrollTo(0, -document.body.scrollHeight)");
+
+
+        log.info("Clipping all coupons");
 
         webDriver.executeScript(
             "document.querySelectorAll('.grid-coupon-container .grid-coupon-description-text-details')"
