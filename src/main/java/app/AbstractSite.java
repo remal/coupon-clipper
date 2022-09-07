@@ -83,7 +83,7 @@ public abstract class AbstractSite implements Site {
         validate(this, "Validation failed for object of " + this.getClass());
 
         forBrowserContainer(browserContainer -> {
-            var driver = getWebDriverFor(browserContainer);
+            var driver = browserContainer.getWebDriver();
             var wait = new ExtendedWebDriverWait(driver, this::canonizeUrl);
 
             //driver.manage().window().setSize(new Dimension(1680, 1050));
@@ -104,18 +104,6 @@ public abstract class AbstractSite implements Site {
         });
 
         log.info("All coupons are clipped");
-    }
-
-    private static RemoteWebDriver getWebDriverFor(BrowserWebDriverContainer<?> container) {
-        for (int attempt = 1; ; ++attempt) {
-            try {
-                return container.getWebDriver();
-            } catch (Exception e) {
-                if (attempt > 3) {
-                    throw e;
-                }
-            }
-        }
     }
 
     private void clearCookiesIfNeeded() {
