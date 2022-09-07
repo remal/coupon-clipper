@@ -28,6 +28,7 @@ public class Safeway extends AbstractSite {
     }
 
     private void signIn(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
+        log.info("Checking login status");
         var signInUrl = "https://safeway.com/account/sign-in.html";
         webDriver.get(signInUrl);
         wait.randomDuration();
@@ -46,11 +47,10 @@ public class Safeway extends AbstractSite {
     }
 
     private static void clickClipCouponsButtons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
+        log.info("Loading all coupons");
         webDriver.get("https://safeway.com/foru/coupons-deals.html");
         wait.randomDuration();
 
-
-        log.info("Loading all coupons");
 
         webDriver.executeScript(
             "document.querySelectorAll('.banner-experiencefragment')"

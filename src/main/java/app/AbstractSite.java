@@ -75,7 +75,7 @@ public abstract class AbstractSite implements Site {
 
     @Override
     public final void clipCoupons() {
-        log.info("Clipping coupons for: {}", getAuth().getLogin());
+        log.info("Clipping coupons: {}", getAuth().getLogin());
 
         validate(this, "Validation failed for object of " + this.getClass());
 
@@ -144,9 +144,8 @@ public abstract class AbstractSite implements Site {
                 return domain;
             }))
             .forEach((domain, domainCookies) -> {
-                log.info("Settings cookies for {}", domain);
-
                 for (var protocol : asList("http", "https")) {
+                    log.info("Settings cookies: {} ({})", domain, protocol.toUpperCase());
                     driver.get(protocol + "://" + domain + "/favicon.ico");
                     for (var cookie : domainCookies) {
                         try {
