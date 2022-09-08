@@ -40,7 +40,7 @@ dependencies {
     implementation "org.seleniumhq.selenium:selenium-remote-driver:$seleniumVersion"
     implementation "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
     implementation "org.seleniumhq.selenium:selenium-support:$seleniumVersion"
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.2.0.202206071550-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names'
