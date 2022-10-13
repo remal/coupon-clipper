@@ -33,7 +33,7 @@ dependencies {
     annotationProcessor "com.google.auto.service:auto-service:$autoServiceVersion"
 
     implementation platform('org.testcontainers:testcontainers-bom:1.17.5')
-    implementation platform('com.fasterxml.jackson:jackson-bom:2.13.4.20221012')
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.13.4.20221013')
     implementation platform('org.apache.logging.log4j:log4j-bom:2.19.0')
 
     implementation 'org.testcontainers:selenium'
