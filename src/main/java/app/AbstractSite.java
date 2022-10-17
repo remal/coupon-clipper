@@ -195,7 +195,9 @@ public abstract class AbstractSite implements Site {
         var browserContainer = new BrowserWebDriverContainer<>()
             .withRecordingMode(RECORD_ALL, VNC_RECORDING_DIRECTORY)
             .withCapabilities(SELENIUM_CAPABILITIES)
-            .withRecordingFileFactory(new SiteRecordingFileFactory());
+            .withRecordingFileFactory(new SiteRecordingFileFactory())
+            // fix for https://github.com/testcontainers/testcontainers-java/issues/5833 :
+            .withEnv("SE_OPTS", "--session-retry-interval 1");
         try (browserContainer) {
             log.debug("Starting container");
             browserContainer.start();

@@ -56,7 +56,7 @@ jobs:
         command: |
           ./gradlew run
         attempt_limit: 3
-        attempt_delay: 2500
+        attempt_delay: 5000
     - name: Upload recordings
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
