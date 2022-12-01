@@ -24,7 +24,7 @@ repositories {
 
 String lombokVersion = '1.18.24'
 String autoServiceVersion = '1.0.1'
-String seleniumVersion = '4.6.0'
+String seleniumVersion = '4.7.0'
 
 dependencies {
     compileOnly "org.projectlombok:lombok:$lombokVersion"
