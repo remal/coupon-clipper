@@ -42,5 +42,16 @@ jobs:
         restore-keys: |
           ${{runner.os}}-docker-layers-
     - name: Build
+      env:
+        DATA_REPOSITORY: ${{secrets.DATA_REPOSITORY}}
+        DATA_REPOSITORY_BRANCH: ${{secrets.DATA_REPOSITORY_BRANCH}}
+        DATA_REPOSITORY_TOKEN: ${{secrets.DATA_REPOSITORY_TOKEN}}
       run: |
-        ./gradlew build
+        ./gradlew build runTest
+    - name: Upload recordings
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: recordings
+        path: .recordings/*
+        retention-days: 7

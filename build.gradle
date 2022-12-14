@@ -133,8 +133,27 @@ project.ext.getLocalProperty = { String propertyName, String fallbackEnvironment
         ?: (fallbackEnvironmentVariableName?.with { System.getenv(it) })
 }
 
-tasks.withType(JavaExec) {
-    getLocalProperty('data-repository', 'DATA_REPOSITORY')?.with { environment('DATA_REPOSITORY', it) }
-    getLocalProperty('data-repository-token', 'DATA_REPOSITORY_TOKEN')?.with { environment('DATA_REPOSITORY_TOKEN', it) }
-    getLocalProperty('data-repository-branch', 'DATA_REPOSITORY_BRANCH')?.with { environment('DATA_REPOSITORY_BRANCH', it) }
+tasks.withType(JavaExec) { JavaExec task ->
+    task.workingDir = project.projectDir
+    getLocalProperty('data-repository', 'DATA_REPOSITORY')?.with { task.environment('DATA_REPOSITORY', it) }
+    getLocalProperty('data-repository-token', 'DATA_REPOSITORY_TOKEN')?.with { task.environment('DATA_REPOSITORY_TOKEN', it) }
+    getLocalProperty('data-repository-branch', 'DATA_REPOSITORY_BRANCH')?.with { task.environment('DATA_REPOSITORY_BRANCH', it) }
+}
+
+tasks.register('testRun', JavaExec) { JavaExec task ->
+    task.dependsOn('assemble')
+
+    task.group = 'verification'
+    task.mainClass.convention(tasks.run.mainClass)
+    task.mainModule.convention(tasks.run.mainModule)
+    task.modularity.inferModulePath.convention(tasks.run.modularity.inferModulePath)
+    task.javaLauncher.convention(tasks.run.javaLauncher)
+
+    task.onlyIf {
+        task.classpath = tasks.run.classpath
+        task.jvmArgs(tasks.run.jvmArgs)
+        return true
+    }
+
+    task.args('test')
 }

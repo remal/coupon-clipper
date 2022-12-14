@@ -1,6 +1,7 @@
 package app;
 
 import static java.lang.System.getenv;
+import static java.util.Arrays.stream;
 import static java.util.function.Predicate.not;
 
 import java.util.Optional;
@@ -13,6 +14,12 @@ public class Main {
 
     @SneakyThrows
     public static void main(String[] args) {
+        if (stream(args).anyMatch("test"::equalsIgnoreCase)) {
+            mainTest();
+            return;
+        }
+
+
         var data = Data.builder()
             .repositoryUri(getenv("DATA_REPOSITORY"))
             .repositoryToken(getenv("DATA_REPOSITORY_TOKEN"))
@@ -38,6 +45,17 @@ public class Main {
         if (aggregatorException.getSuppressed().length != 0) {
             throw aggregatorException;
         }
+    }
+
+    private static void mainTest() {
+        var testSite = TestSite.builder()
+            .auth(Auth.builder()
+                .login("test")
+                .password("test")
+                .build()
+            )
+            .build();
+        testSite.clipCoupons();
     }
 
     static {

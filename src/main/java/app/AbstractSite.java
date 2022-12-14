@@ -138,6 +138,10 @@ public abstract class AbstractSite implements Site {
                 return domain;
             }))
             .forEach((domain, domainCookies) -> {
+                if (domainCookies.isEmpty()) {
+                    return;
+                }
+
                 Set<String> processedProtocols = new LinkedHashSet<>();
                 for (var protocol : asList("http", "https")) {
                     if (!processedProtocols.add(protocol)) {
