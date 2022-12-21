@@ -47,7 +47,7 @@ jobs:
         DATA_REPOSITORY_BRANCH: ${{secrets.DATA_REPOSITORY_BRANCH}}
         DATA_REPOSITORY_TOKEN: ${{secrets.DATA_REPOSITORY_TOKEN}}
       run: |
-        ./gradlew build runTest
+        ./gradlew build testRun
     - name: Upload recordings
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
