@@ -38,8 +38,8 @@ jobs:
     - name: Cache Docker images
       uses: satackey/action-docker-layer-caching@v0.0.11
       with:
-        key: v1-${{runner.os}}-docker-layers-${{hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', '**/gradle.properties')}}
-        restore-keys: v1-${{runner.os}}-docker-layers-${{hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', '**/gradle.properties')}}
+        key: v1-${{runner.os}}-docker-layers-${{hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', '**/gradle.properties')}}-cache
+        restore-keys: v1-${{runner.os}}-docker-layers-${{hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', '**/gradle.properties')}}-
     - name: Build
       env:
         DATA_REPOSITORY: ${{secrets.DATA_REPOSITORY}}
