@@ -40,11 +40,6 @@ jobs:
       with:
         username: ${{secrets.DOCKERHUB_USERNAME}}
         password: ${{secrets.DOCKERHUB_TOKEN}}
-    - name: Cache Docker images
-      uses: satackey/action-docker-layer-caching@v0.0.11
-      with:
-        key: v1-${{runner.os}}-docker-layers-${{hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', '**/gradle.properties')}}-cache
-        restore-keys: v1-${{runner.os}}-docker-layers-${{hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', '**/gradle.properties')}}-
     - name: Run
       uses: Wandalen/wretry.action@v1.0.11
       env:
