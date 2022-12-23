@@ -33,6 +33,8 @@ public class Safeway extends AbstractSite {
         webDriver.get(signInUrl);
         wait.randomDuration();
 
+        acceptCookies(webDriver, wait);
+
         if (!canonizeUrl(webDriver.getCurrentUrl()).equals(canonizeUrl(signInUrl))) {
             log.info("Already signed in");
             return;
@@ -50,6 +52,7 @@ public class Safeway extends AbstractSite {
         log.info("Loading all coupons");
         webDriver.get("https://safeway.com/foru/coupons-deals.html");
         wait.randomDuration();
+        acceptCookies(webDriver, wait);
 
 
         webDriver.executeScript(
@@ -111,6 +114,19 @@ public class Safeway extends AbstractSite {
             button.click();
 
             await(container).forVisibilityOfElementLocatedBy(cssSelector(".coupon-clipped-container"));
+        }
+    }
+
+
+    private static void acceptCookies(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
+        try {
+            var button = webDriver.findElement(cssSelector("#onetrust-accept-btn-handler"));
+            if (button.isDisplayed() && button.isEnabled()) {
+                button.click();
+                wait.randomDuration();
+            }
+        } catch (NotFoundException ignored) {
+            // do nothing
         }
     }
 
