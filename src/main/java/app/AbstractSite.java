@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static lombok.AccessLevel.NONE;
-import static org.openqa.selenium.chrome.ChromeDriverLogLevel.INFO;
 import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordingMode.RECORD_ALL;
 
 import app.utils.ExtendedElementWait;
@@ -36,6 +35,7 @@ import lombok.experimental.SuperBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidCookieDomainException;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebElement;
@@ -88,7 +88,8 @@ public abstract class AbstractSite implements Site {
             log.debug("  ... WebDriver started");
             var wait = new ExtendedWebDriverWait(driver, this::canonizeUrl);
 
-            //driver.manage().window().setSize(new Dimension(1680, 1050));
+            driver.manage().window().maximize();
+            driver.manage().window().setSize(DIMENSION);
 
             clearCookiesIfNeeded();
             setCookiesTo(driver);
@@ -190,8 +191,10 @@ public abstract class AbstractSite implements Site {
 
     private static final File VNC_RECORDING_DIRECTORY = new File(".recordings").getAbsoluteFile();
 
+    private static final Dimension DIMENSION = new Dimension(1920, 1080);
+
     private static final MutableCapabilities SELENIUM_CAPABILITIES = new ChromeOptions()
-        .setLogLevel(INFO);
+        .addArguments(format("--window-size=%d,%d", DIMENSION.getWidth(), DIMENSION.getHeight()));
 
     @SneakyThrows
     @SuppressWarnings("resource")
@@ -200,6 +203,8 @@ public abstract class AbstractSite implements Site {
             .withRecordingMode(RECORD_ALL, VNC_RECORDING_DIRECTORY)
             .withCapabilities(SELENIUM_CAPABILITIES)
             .withRecordingFileFactory(new SiteRecordingFileFactory())
+            .withEnv("SE_SCREEN_WIDTH", String.valueOf(DIMENSION.getWidth()))
+            .withEnv("SE_SCREEN_HEIGHT", String.valueOf(DIMENSION.getHeight()))
             // fix for https://github.com/testcontainers/testcontainers-java/issues/5833 :
             .withEnv("SE_OPTS", "--session-retry-interval 1");
         try (browserContainer) {
