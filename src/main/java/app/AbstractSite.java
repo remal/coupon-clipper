@@ -89,7 +89,6 @@ public abstract class AbstractSite implements Site {
             var wait = new ExtendedWebDriverWait(driver, this::canonizeUrl);
 
             driver.manage().window().maximize();
-            driver.manage().window().setSize(DIMENSION);
 
             clearCookiesIfNeeded();
             setCookiesTo(driver);
@@ -191,10 +190,9 @@ public abstract class AbstractSite implements Site {
 
     private static final File VNC_RECORDING_DIRECTORY = new File(".recordings").getAbsoluteFile();
 
-    private static final Dimension DIMENSION = new Dimension(1920, 1080);
+    private static final Dimension RESOLUTION = new Dimension(1920, 1080);
 
-    private static final MutableCapabilities SELENIUM_CAPABILITIES = new ChromeOptions()
-        .addArguments(format("--window-size=%d,%d", DIMENSION.getWidth(), DIMENSION.getHeight()));
+    private static final MutableCapabilities SELENIUM_CAPABILITIES = new ChromeOptions();
 
     @SneakyThrows
     @SuppressWarnings("resource")
@@ -203,8 +201,8 @@ public abstract class AbstractSite implements Site {
             .withRecordingMode(RECORD_ALL, VNC_RECORDING_DIRECTORY)
             .withCapabilities(SELENIUM_CAPABILITIES)
             .withRecordingFileFactory(new SiteRecordingFileFactory())
-            .withEnv("SE_SCREEN_WIDTH", String.valueOf(DIMENSION.getWidth()))
-            .withEnv("SE_SCREEN_HEIGHT", String.valueOf(DIMENSION.getHeight()))
+            .withEnv("SE_SCREEN_WIDTH", String.valueOf(RESOLUTION.getWidth()))
+            .withEnv("SE_SCREEN_HEIGHT", String.valueOf(RESOLUTION.getHeight()))
             // fix for https://github.com/testcontainers/testcontainers-java/issues/5833 :
             .withEnv("SE_OPTS", "--session-retry-interval 1");
         try (browserContainer) {
