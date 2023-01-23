@@ -192,7 +192,8 @@ public abstract class AbstractSite implements Site {
 
     private static final Dimension RESOLUTION = new Dimension(1920, 1080);
 
-    private static final MutableCapabilities SELENIUM_CAPABILITIES = new ChromeOptions();
+    private static final MutableCapabilities SELENIUM_CAPABILITIES = new ChromeOptions()
+        .addArguments(format("--window-size=%d,%d", RESOLUTION.getWidth() - 25, RESOLUTION.getHeight() - 25));
 
     @SneakyThrows
     @SuppressWarnings("resource")
