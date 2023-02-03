@@ -22,7 +22,7 @@ repositories {
     mavenCentral()
 }
 
-String lombokVersion = '1.18.24'
+String lombokVersion = '1.18.26'
 String autoServiceVersion = '1.0.1'
 String seleniumVersion = '4.8.0'
 
