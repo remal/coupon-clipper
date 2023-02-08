@@ -90,7 +90,7 @@ project.ext.replaceModule = { String from, String to, String because = null, int
     }
 }
 
-project.replaceModule('junit:junit', 'io.quarkus:quarkus-junit4-mock:2.16.1.Final', 'don\'t use JUnit4')
+project.replaceModule('junit:junit', 'io.quarkus:quarkus-junit4-mock:2.16.2.Final', 'don\'t use JUnit4')
 
 class SeleniumAlignmentRule implements ComponentMetadataRule {
     void execute(ComponentMetadataContext context) {
