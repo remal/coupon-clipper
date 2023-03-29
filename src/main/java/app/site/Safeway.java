@@ -98,6 +98,10 @@ public class Safeway extends AbstractSite {
             var isAnyButtonClicked = false;
             var containers = webDriver.findElements(containersSelector);
             for (var container : containers) {
+                if (!container.isDisplayed()) {
+                    continue;
+                }
+
                 final WebElement button;
                 try {
                     button = container.findElement(cssSelector(".btn.grid-coupon-btn"));
