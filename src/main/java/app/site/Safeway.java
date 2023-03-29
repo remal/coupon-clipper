@@ -1,17 +1,18 @@
 package app.site;
 
+import static java.util.Collections.reverse;
 import static org.openqa.selenium.By.cssSelector;
 
 import app.AbstractSite;
 import app.SiteMarker;
 import app.utils.ExtendedWebDriverWait;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.NotFoundException;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -49,7 +50,6 @@ public class Safeway extends AbstractSite {
         wait.untilUrlIsNot(signInUrl);
     }
 
-    @SuppressWarnings("java:S3776")
     private static void clickClipCouponsButtons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
         log.info("Loading all coupons");
         webDriver.get("https://safeway.com/foru/coupons-deals.html");
@@ -62,18 +62,19 @@ public class Safeway extends AbstractSite {
                 + ".forEach(element => element.remove())"
         );
 
-        var containersSelectorCss = ".grid-coupon-container";
-        var containersSelector = cssSelector(containersSelectorCss);
+        var allContainersSelector = cssSelector(".grid-coupon-container");
+        var containersWithButtonSelector = cssSelector(".grid-coupon-container:has(.btn.grid-coupon-btn)");
         var loadMoreSelector = cssSelector(".load-more-container .btn.load-more");
+
         var loadMore = wait.untilVisible(loadMoreSelector);
         var prevCouponItemsCounter = new AtomicInteger(
-            webDriver.findElements(containersSelector).size()
+            webDriver.findElements(allContainersSelector).size()
         );
         while (loadMore.isDisplayed()) {
             log.debug("Loading more coupons");
             loadMore.click();
             wait.until(__ -> {
-                var couponItemsCounter = webDriver.findElements(containersSelector).size();
+                var couponItemsCounter = webDriver.findElements(allContainersSelector).size();
                 if (couponItemsCounter > prevCouponItemsCounter.get()) {
                     prevCouponItemsCounter.set(couponItemsCounter);
                     return true;
@@ -97,35 +98,26 @@ public class Safeway extends AbstractSite {
                 + ".forEach(element => element.remove())"
         );
 
-        while (true) {
-            var isAnyButtonClicked = false;
-            var containers = webDriver.findElements(containersSelector);
-            for (var container : containers) {
-                final WebElement button;
-                try {
-                    button = container.findElement(cssSelector(".btn.grid-coupon-btn"));
-                    if (!button.isDisplayed() || !button.isEnabled()) {
-                        continue;
-                    }
-                } catch (NotFoundException | StaleElementReferenceException ignored) {
+        var containers = new ArrayList<>(webDriver.findElements(containersWithButtonSelector));
+        reverse(containers);
+        for (var container : containers) {
+            final WebElement button;
+            try {
+                button = container.findElement(cssSelector(".btn.grid-coupon-btn"));
+                if (!button.isDisplayed() || !button.isEnabled()) {
                     continue;
                 }
-
-                var title = container.findElement(cssSelector(".grid-coupon-description-text-title"))
-                    .getText()
-                    .trim();
-                log.info("Clipping Coupon: {}", title);
-
-                button.click();
-                wait.randomDuration();
-
-                isAnyButtonClicked = true;
-                break;
+            } catch (NotFoundException ignored) {
+                continue;
             }
 
-            if (!isAnyButtonClicked) {
-                break;
-            }
+            var title = container.findElement(cssSelector(".grid-coupon-description-text-title"))
+                .getText()
+                .trim();
+            log.info("Clipping Coupon: {}", title);
+
+            button.click();
+            wait.randomDuration();
         }
     }
 
