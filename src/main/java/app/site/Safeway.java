@@ -115,8 +115,6 @@ public class Safeway extends AbstractSite {
 
                 button.click();
 
-                await(container).forVisibilityOfElementLocatedBy(cssSelector(".coupon-clipped-container"));
-
                 isAnyButtonClicked = true;
                 break;
             }
