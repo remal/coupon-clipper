@@ -94,26 +94,36 @@ public class Safeway extends AbstractSite {
                 + ".forEach(element => element.remove())"
         );
 
-        var containers = webDriver.findElements(containersSelector);
-        for (var container : containers) {
-            final WebElement button;
-            try {
-                button = container.findElement(cssSelector(".btn.grid-coupon-btn"));
-                if (!button.isDisplayed() || !button.isEnabled()) {
+        while (true) {
+            var isAnyButtonClicked = false;
+            var containers = webDriver.findElements(containersSelector);
+            for (var container : containers) {
+                final WebElement button;
+                try {
+                    button = container.findElement(cssSelector(".btn.grid-coupon-btn"));
+                    if (!button.isDisplayed() || !button.isEnabled()) {
+                        continue;
+                    }
+                } catch (NotFoundException ignored) {
                     continue;
                 }
-            } catch (NotFoundException ignored) {
-                continue;
+
+                var title = container.findElement(cssSelector(".grid-coupon-description-text-title"))
+                    .getText()
+                    .trim();
+                log.info("Clipping Coupon: {}", title);
+
+                button.click();
+
+                await(container).forVisibilityOfElementLocatedBy(cssSelector(".coupon-clipped-container"));
+
+                isAnyButtonClicked = true;
+                break;
             }
 
-            var title = container.findElement(cssSelector(".grid-coupon-description-text-title"))
-                .getText()
-                .trim();
-            log.info("Clipping Coupon: {}", title);
-
-            button.click();
-
-            await(container).forVisibilityOfElementLocatedBy(cssSelector(".coupon-clipped-container"));
+            if (!isAnyButtonClicked) {
+                break;
+            }
         }
     }
 
