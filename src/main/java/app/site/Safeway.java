@@ -11,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.NotFoundException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -48,6 +49,7 @@ public class Safeway extends AbstractSite {
         wait.untilUrlIsNot(signInUrl);
     }
 
+    @SuppressWarnings("java:S3776")
     private static void clickClipCouponsButtons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
         log.info("Loading all coupons");
         webDriver.get("https://safeway.com/foru/coupons-deals.html");
@@ -60,7 +62,8 @@ public class Safeway extends AbstractSite {
                 + ".forEach(element => element.remove())"
         );
 
-        var containersSelector = cssSelector(".grid-coupon-container");
+        var containersSelectorCss = ".grid-coupon-container";
+        var containersSelector = cssSelector(containersSelectorCss);
         var loadMoreSelector = cssSelector(".load-more-container .btn.load-more");
         var loadMore = wait.untilVisible(loadMoreSelector);
         var prevCouponItemsCounter = new AtomicInteger(
@@ -96,19 +99,15 @@ public class Safeway extends AbstractSite {
 
         while (true) {
             var isAnyButtonClicked = false;
-            var containers = webDriver.findElements(containersSelector);
+            var containers = webDriver.findElements(cssSelector(containersSelectorCss + ":has(.btn.grid-coupon-btn)"));
             for (var container : containers) {
-                if (!container.isDisplayed()) {
-                    continue;
-                }
-
                 final WebElement button;
                 try {
                     button = container.findElement(cssSelector(".btn.grid-coupon-btn"));
                     if (!button.isDisplayed() || !button.isEnabled()) {
                         continue;
                     }
-                } catch (NotFoundException ignored) {
+                } catch (NotFoundException | StaleElementReferenceException ignored) {
                     continue;
                 }
 
@@ -118,6 +117,7 @@ public class Safeway extends AbstractSite {
                 log.info("Clipping Coupon: {}", title);
 
                 button.click();
+                wait.randomDuration();
 
                 isAnyButtonClicked = true;
                 break;
