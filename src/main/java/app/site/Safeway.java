@@ -132,17 +132,17 @@ public class Safeway extends AbstractSite {
                 if (!couponContainer.isDisplayed()) {
                     return true;
                 }
+
+                try {
+                    var clippedMarker = couponContainer.findElement(cssSelector(".coupon-clipped-container"));
+                    if (clippedMarker.isDisplayed()) {
+                        return true;
+                    }
+                } catch (NotFoundException ignored) {
+                    // do nothing
+                }
             } catch (StaleElementReferenceException ignored) {
                 return true;
-            }
-
-            try {
-                var clippedMarker = couponContainer.findElement(cssSelector(".coupon-clipped-container"));
-                if (clippedMarker.isDisplayed()) {
-                    return true;
-                }
-            } catch (NotFoundException ignored) {
-                // do nothing
             }
 
             return false;
