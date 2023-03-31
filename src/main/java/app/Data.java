@@ -280,6 +280,11 @@ public class Data {
             return false;
         }
 
+        @Override
+        public void showDuration(boolean enabled) {
+            // do nothing
+        }
+
     }
 
 }
