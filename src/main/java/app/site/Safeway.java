@@ -67,10 +67,7 @@ public class Safeway extends AbstractSite {
         while (true) {
             clipCoupons(webDriver, wait);
 
-            var areMoreCouponsLoaded = false;
-            for (var n = 1; n <= 3; ++n) {
-                areMoreCouponsLoaded |= loadMoreCoupons(webDriver, wait);
-            }
+            var areMoreCouponsLoaded = loadMoreCoupons(webDriver, wait);
             if (!areMoreCouponsLoaded) {
                 break;
             }
