@@ -7,12 +7,13 @@ import app.AbstractSite;
 import app.SiteMarker;
 import app.utils.ExtendedWebDriverWait;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntSupplier;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 import lombok.extern.log4j.Log4j2;
 import org.openqa.selenium.NotFoundException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -51,7 +52,7 @@ public class Safeway extends AbstractSite {
     }
 
     private static void clickClipCouponsButtons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
-        log.info("Loading all coupons");
+        log.info("Opening coupons page");
         webDriver.get("https://safeway.com/foru/coupons-deals.html");
         wait.randomDuration();
         acceptCookies(webDriver, wait);
@@ -62,65 +63,19 @@ public class Safeway extends AbstractSite {
                 + ".forEach(element => element.remove())"
         );
 
-        var allContainersSelector = cssSelector(".grid-coupon-container");
-        var containersWithButtonSelector = cssSelector(".grid-coupon-container:has(.btn.grid-coupon-btn)");
-        var loadMoreSelector = cssSelector(".load-more-container .btn.load-more");
 
-        var loadMore = wait.untilVisible(loadMoreSelector);
-        var prevCouponItemsCounter = new AtomicInteger(
-            webDriver.findElements(allContainersSelector).size()
-        );
-        while (loadMore.isDisplayed()) {
-            log.debug("Loading more coupons");
-            loadMore.click();
-            wait.until(__ -> {
-                var couponItemsCounter = webDriver.findElements(allContainersSelector).size();
-                if (couponItemsCounter > prevCouponItemsCounter.get()) {
-                    prevCouponItemsCounter.set(couponItemsCounter);
-                    return true;
-                }
-                return false;
-            });
+        while (true) {
+            clipCoupons(webDriver, wait);
 
-            try {
-                loadMore = webDriver.findElement(loadMoreSelector);
-            } catch (NotFoundException ignored) {
+            var areMoreCouponsLoaded = false;
+            for (var n = 1; n <= 3; ++n) {
+                areMoreCouponsLoaded |= loadMoreCoupons(webDriver, wait);
+            }
+            if (!areMoreCouponsLoaded) {
                 break;
             }
         }
-        webDriver.executeScript("window.scrollTo(0, -document.body.scrollHeight)");
-
-
-        log.info("Clipping all coupons");
-
-        webDriver.executeScript(
-            "document.querySelectorAll('.grid-coupon-container .grid-coupon-description-text-details')"
-                + ".forEach(element => element.remove())"
-        );
-
-        var containers = new ArrayList<>(webDriver.findElements(containersWithButtonSelector));
-        reverse(containers);
-        for (var container : containers) {
-            final WebElement button;
-            try {
-                button = container.findElement(cssSelector(".btn.grid-coupon-btn"));
-                if (!button.isDisplayed() || !button.isEnabled()) {
-                    continue;
-                }
-            } catch (NotFoundException ignored) {
-                continue;
-            }
-
-            var title = container.findElement(cssSelector(".grid-coupon-description-text-title"))
-                .getText()
-                .trim();
-            log.info("Clipping Coupon: {}", title);
-
-            button.click();
-            wait.randomDuration();
-        }
     }
-
 
     private static void acceptCookies(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
         try {
@@ -132,6 +87,98 @@ public class Safeway extends AbstractSite {
         } catch (NotFoundException ignored) {
             // do nothing
         }
+    }
+
+    private static boolean clipCoupons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
+        var isAnyCouponClipped = false;
+        while (true) {
+            var isCouponClipped = false;
+
+            var couponContainers = new ArrayList<>(
+                webDriver.findElements(cssSelector(".grid-coupon-container:has(.btn.grid-coupon-btn)"))
+            );
+            reverse(couponContainers);
+            for (var couponContainer : couponContainers) {
+                isCouponClipped = clipCoupon(couponContainer, wait);
+                if (isCouponClipped) {
+                    isAnyCouponClipped = true;
+                    break;
+                }
+            }
+
+            if (!isCouponClipped) {
+                return isAnyCouponClipped;
+            }
+        }
+    }
+
+    private static boolean clipCoupon(WebElement couponContainer, ExtendedWebDriverWait wait) {
+        final WebElement button;
+        try {
+            button = couponContainer.findElement(cssSelector(".btn.grid-coupon-btn"));
+            if (!button.isDisplayed() || !button.isEnabled()) {
+                return false;
+            }
+        } catch (NotFoundException ignored) {
+            return false;
+        }
+
+        var title = couponContainer.findElement(cssSelector(".grid-coupon-description-text-title"))
+            .getText()
+            .trim();
+
+        log.info("Clipping coupon: {}", title);
+        button.click();
+
+        wait.until(__ -> {
+            try {
+                if (!couponContainer.isDisplayed()) {
+                    return true;
+                }
+            } catch (StaleElementReferenceException ignored) {
+                return true;
+            }
+
+            try {
+                var clippedMarker = couponContainer.findElement(cssSelector(".coupon-clipped-container"));
+                if (clippedMarker.isDisplayed()) {
+                    return true;
+                }
+            } catch (NotFoundException ignored) {
+                // do nothing
+            }
+
+            return false;
+        });
+
+        return true;
+    }
+
+    private static boolean loadMoreCoupons(RemoteWebDriver webDriver, ExtendedWebDriverWait wait) {
+        final WebElement button;
+        try {
+            button = webDriver.findElement(cssSelector(".load-more-container .btn.load-more"));
+            if (!button.isDisplayed() || !button.isEnabled()) {
+                return false;
+            }
+        } catch (NotFoundException ignored) {
+            return false;
+        }
+
+        IntSupplier getCouponsCount = () -> webDriver.findElements(cssSelector(".grid-coupon-container")).size();
+        var couponsCountBefore = getCouponsCount.getAsInt();
+
+        log.info("Loading more coupons");
+        button.click();
+
+        wait.until(__ -> {
+            var couponsCount = getCouponsCount.getAsInt();
+            return couponsCount > couponsCountBefore;
+        });
+
+        webDriver.executeScript("window.scrollTo(0, -document.body.scrollHeight)");
+
+        return true;
     }
 
 
