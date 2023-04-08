@@ -4,11 +4,12 @@ import static app.utils.ValidationUtils.validate;
 import static java.lang.String.format;
 import static java.nio.file.Files.createDirectories;
 import static java.time.temporal.ChronoUnit.NANOS;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static lombok.AccessLevel.NONE;
+import static org.rnorth.ducttape.timeouts.Timeouts.getWithTimeout;
+import static org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess;
 import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordingMode.RECORD_ALL;
 
 import app.utils.ExtendedElementWait;
@@ -20,12 +21,14 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.Builder.Default;
 import lombok.Getter;
@@ -83,26 +86,25 @@ public abstract class AbstractSite implements Site {
         validate(this, "Validation failed for object of " + this.getClass());
 
         forBrowserContainer(browserContainer -> {
-            log.debug("Starting WebDriver");
-            var driver = browserContainer.getWebDriver();
-            log.debug("  ... WebDriver started");
-            var wait = new ExtendedWebDriverWait(driver, this::canonizeUrl);
+            forWebDriver(browserContainer, webDriver -> {
+                var wait = new ExtendedWebDriverWait(webDriver, this::canonizeUrl);
 
-            driver.manage().window().maximize();
+                webDriver.manage().window().maximize();
 
-            clearCookiesIfNeeded();
-            setCookiesTo(driver);
+                clearCookiesIfNeeded();
+                setCookiesTo(webDriver);
 
-            try {
-                clipCouponsImpl(driver, wait);
+                try {
+                    clipCouponsImpl(webDriver, wait);
 
-            } catch (Throwable exception) {
-                getCookies().clear();
-                lastCookieClean.set(Instant.now());
-                throw exception;
-            }
+                } catch (Throwable exception) {
+                    getCookies().clear();
+                    lastCookieClean.set(Instant.now());
+                    throw exception;
+                }
 
-            setCookiesFrom(driver);
+                setCookiesFrom(webDriver);
+            });
         });
 
         log.info("All coupons are clipped");
@@ -115,7 +117,7 @@ public abstract class AbstractSite implements Site {
             COOKIE_EXPIRATION_MIN.toSeconds(),
             COOKIE_EXPIRATION_MAX.toSeconds()
         );
-        var cookieClean = now.minus(expirationSeconds, SECONDS);
+        var cookieClean = now.minus(expirationSeconds, ChronoUnit.SECONDS);
         if (cookieClean.isAfter(lastCookieClean.get())) {
             log.info("Clearing cookies");
             getCookies().clear();
@@ -195,6 +197,12 @@ public abstract class AbstractSite implements Site {
     private static final MutableCapabilities SELENIUM_CAPABILITIES = new ChromeOptions()
         .addArguments(format("--window-size=%d,%d", RESOLUTION.getWidth() - 25, RESOLUTION.getHeight() - 25));
 
+
+    @FunctionalInterface
+    private interface BrowserContainerAction {
+        void execute(BrowserWebDriverContainer<?> browserContainer) throws Throwable;
+    }
+
     @SneakyThrows
     @SuppressWarnings("resource")
     private void forBrowserContainer(BrowserContainerAction action) {
@@ -246,11 +254,6 @@ public abstract class AbstractSite implements Site {
         }
     }
 
-    @FunctionalInterface
-    private interface BrowserContainerAction {
-        void execute(BrowserWebDriverContainer<?> browserContainer) throws Throwable;
-    }
-
     private static class SiteRecordingFileFactory extends DefaultRecordingFileFactory {
         @Override
         @SneakyThrows
@@ -269,6 +272,34 @@ public abstract class AbstractSite implements Site {
                 new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()),
                 recordingFormat.getFilenameExtension()
             ));
+        }
+    }
+
+
+    @FunctionalInterface
+    private interface WebDriverContainerAction {
+        void execute(RemoteWebDriver webDriver) throws Throwable;
+    }
+
+    @SneakyThrows
+    private void forWebDriver(BrowserWebDriverContainer<?> browserContainer, WebDriverContainerAction action) {
+        log.debug("Starting WebDriver");
+        var webDriver = retryUntilSuccess(
+            60,
+            TimeUnit.SECONDS,
+            () -> getWithTimeout(
+                10,
+                TimeUnit.SECONDS,
+                () -> new RemoteWebDriver(browserContainer.getSeleniumAddress(), SELENIUM_CAPABILITIES)
+            )
+        );
+        log.debug("  ... WebDriver started");
+
+        try {
+            action.execute(webDriver);
+
+        } finally {
+            webDriver.close();
         }
     }
 
